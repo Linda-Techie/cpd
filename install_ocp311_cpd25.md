@@ -150,17 +150,18 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
 
 1. Ensure the newly created docker volume is properly mounted
   ```
-  [root@ansible ~]# df -h
-  Filesystem                     Size  Used Avail Use% Mounted on
-  /dev/mapper/rhel-root          100G  2.1G   98G   2% /
-  devtmpfs                       3.9G     0  3.9G   0% /dev
-  tmpfs                          3.9G     0  3.9G   0% /dev/shm
-  tmpfs                          3.9G  8.7M  3.9G   1% /run
-  tmpfs                          3.9G     0  3.9G   0% /sys/fs/cgroup
-  /dev/vda1                     1014M  132M  883M  14% /boot
-  tmpfs                          799M     0  799M   0% /run/user/0
-  tmpfs                          799M     0  799M   0% /run/user/1000
-  /dev/mapper/dockervg-dockerlv  100G   33M  100G   1% /var/lib/docker
+  [root@m1 ~]# df -Th
+  Filesystem                    Type      Size  Used Avail Use% Mounted on
+  devtmpfs                      devtmpfs   32G     0   32G   0% /dev
+  tmpfs                         tmpfs      32G     0   32G   0% /dev/shm
+  tmpfs                         tmpfs      32G  1.1M   32G   1% /run
+  tmpfs                         tmpfs      32G     0   32G   0% /sys/fs/cgroup
+  /dev/mapper/rhel-root         xfs        50G  3.8G   47G   8% /
+  /dev/sda1                     xfs      1014M  188M  827M  19% /boot
+  /dev/mapper/rhel-home         xfs       129G   33M  129G   1% /home
+  tmpfs                         tmpfs     6.3G     0  6.3G   0% /run/user/0
+  /dev/mapper/dockervg-dockerlv xfs       200G   33M  200G   1% /var/lib/containers/docker
+
   ```
 
   If you do not see a volume mounted to /var/lib/docker repeat the above process.
@@ -170,6 +171,26 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
 
 1. Edit the file at /etc/ansible/hosts and add the below stanzas making updates as is needed for your implementation
   ```
+  Note: 
+  a) For Portworx
+     Add
+      * openshift_use_crio=True
+      * openshift_use_crio_only=True
+     
+     Change [nodes] section
+     Example:
+     m[1:3].cp4d-5.csplab.local openshift_node_group_name="node-config-master-infra-crio"
+     openshift.cp4d-5.csplab.local openshift_node_group_name="node-config-infra-crio"
+     n[1:5].cp4d-5.csplab.local openshift_node_group_name="node-config-compute-crio"
+
+     Remove or Comment out line:
+     #openshift_node_groups
+  b) For NFS
+     Add 
+     * [nfs] section 
+     * openshift_hosted_registry_storage_nfs_directory=/data #Your mount drive
+     * openshift_hosted_registry_storage_nfs_options='*(rw,no_root_squash,anonuid=1000,anongid=2000)' # Don't worry about the uid & gid
+  
   ### OSE Inventory File
   # For more information see: https://docs.openshift.com/container-platform/3.11/install/configuring_inventory_file.html#configuring-ansible
   # This section defines the types of nodes we will deploy
@@ -203,12 +224,12 @@ openshift_console_hostname=console.apps.cp4d-5.csplab.local
 openshift_master_cluster_method=native
 openshift_master_cluster_hostname=openshift.cp4d-5.csplab.local
 openshift_master_cluster_public_hostname=openshift.cp4d-5.csplab.local
-#openshift_master_default_subdomain=apps.cpd25non-lb-1.fyre.ibm.com
-#openshift_disable_check=memory_availability
 openshift_disable_check=docker_image_availability
+
 # CRI-O
 openshift_use_crio=True
 openshift_use_crio_only=True
+
 # NFS Host Group
 # An NFS volume will be created with path "nfs_directory/volume_name"
 # on the host within the [nfs] host group.  For example, the volume
