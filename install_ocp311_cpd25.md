@@ -281,21 +281,28 @@ n[1:5].cp4d-5.csplab.local openshift_node_group_name="node-config-compute-crio"
   ```
 
 10. Prepare NFS server & client as needed (Optional)
+
 For NFS Server
-  * # yum install -y nfs-utils nfs-utils-lib
-  * # systemctl enable nfs-server
-  * # systemctl start rpcbind
-  * # systemctl start nfs-server
-  * # firewall-cmd --permanent --zone=public --add-service=nfs
-  * # firewall-cmd --permanent --zone=public --add-service=rpcbind
-  * # firewall-cmd --reload
+  * yum install -y nfs-utils nfs-utils-lib
+  * systemctl enable nfs-server
+  * systemctl start rpcbind
+  * systemctl start nfs-server
+  * firewall-cmd --permanent --zone=public --add-service=nfs
+  * firewall-cmd --permanent --zone=public --add-service=rpcbind
+  * firewall-cmd --reload
   
   Prepare NFS server shared disk
+  
   a) lsblk
+  
   b) parted /dev/sdb mklabel gpt
+  
   c) parted -a opt /dev/sdb mkpart primary xfs 0% 100%
+  
   d) mkfs.xfs -f -n ftype=1 -i size=512 -n size=8192 /dev/sdb1
+  
   e) Create a mount drive: # mkdir /data
+  
   f) Modify /etc/fstab for reboot safe
      * blkid
      * vi /etc/fstab
@@ -304,7 +311,6 @@ For NFS Server
            /dev/mapper/rhel-root   /                       xfs     defaults        0 0
            UUID=dd72311a-64e7-45ff-9afb-a150e5dbbaf9 /boot                   xfs     defaults        0 0
            /dev/mapper/rhel-home   /home                   xfs     defaults        0 0
-           #/dev/mapper/rhel-swap   swap                    swap    defaults        0 0
            UUID=284af079-2b6c-40af-89da-229ba79f2f52  /data  xfs  defaults,noatime    1 2
      
   g) mount -a
