@@ -1,4 +1,5 @@
-# Note: Initial Clone from Victor's doc, additions
+# Note: Initial Clone from Victor's doc, This is not intend to supercede the original notes. Modify & Additions in the following list
+  * Remove all information knowledge from the original. This doc is intended to be a cookbook style without detail info.
   * Portworx
   * CPD
 
@@ -6,39 +7,20 @@
 
 For this exercise, the following nodes will be deployed (non-HA instances will only need one of each node type):
 
-|    Node   |  Host   | Storage      | vCPU  | Memory |
-|:--------- |:-------:|:------------ |:----: |:------:|
-| ansible   | host1   | 100,100      |   4   |    8   |
-| lb-master | host1   | 100          |   4   |    8   |
-| lb-infra  | host2   | 100          |   4   |    8   |
-| master1   | host1   | 100,100      |  16   |   64   |
-| master2   | host2   | 100,100      |  16   |   64   |
-| master3   | host3   | 100,100      |  16   |   64   |
-| node1     | host1   | 100,100      |   8   |   32   |
-| node2     | host2   | 100,100      |   8   |   32   |
-| node3     | host3   | 100,100      |   8   |   32   |
-| storage1  | host1   | 100,100,500  |   4   |    8   |
-| storage2  | host2   | 100,100,500  |   4   |    8   |
-| storage3  | host3   | 100,100,500  |   4   |    8   |
-| infra1    | host1   | 100,100      |   8   |   32   |
-| infra2    | host2   | 100,100      |   8   |   32   |
-| infra3    | host3   | 100,100      |   8   |   32   |
-| **Total** |         | **4.3TB**    |**116**|**424** |
+|    Node         |  Host   | Storage      | vCPU  | Memory |
+|:--------------- |:-------:|:------------ |:----: |:------:|
+| ansible         | ansible | 100,100      |   4   |    8   |
+| lb-infra        | lb      | 100          |   4   |    8   |
+| master1+infra   | master1 | 100,200      |  16   |   64   |
+| master2+infra   | master2 | 100,200      |  16   |   64   |
+| master3+infra   | master3 | 100,200      |  16   |   64   |
+| node1           | host1   | 100,200,200  |   8   |   32   |
+| node2           | host2   | 100,200,200  |   8   |   32   |
+| node3           | host3   | 100,200,200  |   8   |   32   |
+| node4           | host4   | 100,200,200  |   8   |   32   |
+| node5           | host5   | 100,200,200  |   8   |   32   |
+| **Total**       |         | **4.3TB**    |**116**|**424** |
 
-  * _Node_ - Name of the host
-    * **ansible** - This is the installer node. Analogous to the ICP boot node.
-    * **lb** - This is the haproxy node, used as a load balancer in HA environments.  One to be used for the master nodes and one for infra nodes.
-    * **master[1-3]** - Manages the cluster.  In this instance, we will configure etcd to run on the master node.  The user may elect to have separate etcd nodes.  If using separate etcd nodes, add three additional nodes provisioned like the master nodes and name them etcd[1-3].
-    * **node[1-3]** - Where workloads run.  This is analogous to the ICP worker node.
-    * **storage[1-3]** - Nodes to host GluserFS which is installed along with the cluster.
-    * **infra[1-3]** - These nodes run OpenShift infrastructure pods
-  * _Host_ - For HA enviroments, each node type should have 3 instances, each running on a separate physical host.  This way the loss of a single physical host cannot disable the cluster.  On hosts running VMware, anti-affinity rules should be used to ensure hosts of a like kind are always running on separate nodes.
-  * _Storage_ - comma separated list of the size of the raw disks needed (in GB).
-    * **Disk 1** is for the operating system (all nodes)
-    * **Disk 2** is for docker storage (all nodes).  Docker storage will be provisioned as LVM so it can be expanded as needed by adding additional PVs.
-    * **Disk 3** is for GlusterFS storage (only on storage nodes). GlusterFS storage is provisioned as LVM so it can be expanded as needed by adding additional PVs.
-  * _vCPU_ - Number of vCPUs to assign to this VM
-  * _Memory_ - Amount of RAM to assign to this VM (in GB)
 
 ## Prepare Nodes for Installation
 
