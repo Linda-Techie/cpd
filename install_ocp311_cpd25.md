@@ -14,45 +14,43 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
 | master1+infra   | master1 | 100,200      |  16   |   64   |
 | master2+infra   | master2 | 100,200      |  16   |   64   |
 | master3+infra   | master3 | 100,200      |  16   |   64   |
-| node1           | host1   | 100,200,200  |   8   |   32   |
-| node2           | host2   | 100,200,200  |   8   |   32   |
-| node3           | host3   | 100,200,200  |   8   |   32   |
-| node4           | host4   | 100,200,200  |   8   |   32   |
-| node5           | host5   | 100,200,200  |   8   |   32   |
-| **Total**       |         | **4.3TB**    |**116**|**424** |
+| worker1         | node1   | 100,200,200  |   8   |   32   |
+| worker2         | node2   | 100,200,200  |   8   |   32   |
+| worker3         | node3   | 100,200,200  |   8   |   32   |
+| worker4         | node4   | 100,200,200  |   8   |   32   |
+| worker5         | node5   | 100,200,200  |   8   |   32   |
 
 
 ## Prepare Nodes for Installation
 
 **Note:** The following steps should be carried out on **all** nodes and be run as the `root` user.
 
-1. Install all nodes with Red Hat Enterprise Linux version 7.5 or later with only the Minimal installation packages. Only install the operating system on the first allocated disk (e.g. /dev/sda, /dev/vda, etc.), the other disk[s] will be allocated later.  Do not put a partition on any disk other than the disk where the operating system will be installed (the boot disk).
+1. Install all nodes with Red Hat Enterprise Linux version 7.4 or higher with only the Minimal installation packages. Only install the operating system on the first allocated disk (e.g. /dev/sda).  Do not put a partition on any disk other than the disk where the operating system will be installed (the boot disk).
 
-1. Configure passwordless SSH between the ansible (installer) node and all other nodes.
+2. No partition on the 2nd and/or 3rd disks for all masters and workers
+3. NFS server disk should have partitioned and formatted with xfs
+4. Configure passwordless SSH between the ansible (installer) node and all other nodes.
   ```
-  cd ~
-  ssh-keygen -t rsa -P ''  # That is two single quotes
+  sudo ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa  # That is two single quotes
+  sudo cat ~/.ssh/id_rsa.put >> ~/.ssh/authorized_keys
+  sudo chmod 700 ~/.ssh
+  sudo chmod 0600 ~/.ssh/authorized_keys
   ```
   Accept all of the default values
 
 1. Copy the root id_rsa.pub key to all other nodes
   ```
-  ssh-copy-id -i ~/.ssh/id_rsa.pub master1.mydomain.local
-  ssh-copy-id -i ~/.ssh/id_rsa.pub master2.mydomain.local
-  ssh-copy-id -i ~/.ssh/id_rsa.pub master3.mydomain.local
-  ssh-copy-id -i ~/.ssh/id_rsa.pub node1.mydomain.local
-  ssh-copy-id -i ~/.ssh/id_rsa.pub node2.mydomain.local
-  ssh-copy-id -i ~/.ssh/id_rsa.pub node3.mydomain.local
-  ssh-copy-id -i ~/.ssh/id_rsa.pub infra1.mydomain.local
-  ssh-copy-id -i ~/.ssh/id_rsa.pub infra2.mydomain.local
-  ssh-copy-id -i ~/.ssh/id_rsa.pub infra3.mydomain.local
-  ssh-copy-id -i ~/.ssh/id_rsa.pub storage1.mydomain.local
-  ssh-copy-id -i ~/.ssh/id_rsa.pub storage2.mydomain.local
-  ssh-copy-id -i ~/.ssh/id_rsa.pub storage3.mydomain.local
-  ssh-copy-id -i ~/.ssh/id_rsa.pub lb.mydomain.local
+  ssh-copy-id -i ~/.ssh/id_rsa.pub master1.cp4d.csplab.local
+  ssh-copy-id -i ~/.ssh/id_rsa.pub master2.cp4d.csplab.local
+  ssh-copy-id -i ~/.ssh/id_rsa.pub master3.cp4d.csplab.local
+  ssh-copy-id -i ~/.ssh/id_rsa.pub node1.cp4d.csplab.local
+  ssh-copy-id -i ~/.ssh/id_rsa.pub node2.cp4d.csplab.local
+  ssh-copy-id -i ~/.ssh/id_rsa.pub node3.cp4d.csplab.local
+  ssh-copy-id -i ~/.ssh/id_rsa.pub node4.cp4d.csplab.local
+  ssh-copy-id -i ~/.ssh/id_rsa.pub node5.cp4d.csplab.local
   ```
 
-1. Install Red Hat Subscriptions
+1. Install Red Hat Subscriptions (all cluster nodes)
   ```
   subscription-manager repos --disable="*"  # Remove existing Subscriptions
   subscription-manager register --username=<RedHat-UserID> --password=<RedHat-Password> # Register the node with Red Hat
@@ -60,23 +58,23 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
   subscription-manager attach --pool=<poolID>  # Pool with entitlement to RHOS
   ```
 
-1. Enable the needed yum repositories
+1. Enable the needed yum repositories (all cluster nodes)
   ```
-  subscription-manager repos --enable="rhel-7-server-rpms" --enable="rhel-7-server-extras-rpms" --enable="rhel-7-server-ose-3.11-rpms" --enable="rhel-7-server-ansible-2.6-rpms" --enable="rh-gluster-3-client-for-rhel-7-server-rpms"
+  subscription-manager repos --enable="rhel-7-server-rpms" --enable="rhel-7-server-extras-rpms" --enable="rhel-7-server-ose-3.11-rpms"  --enable="rh-gluster-3-client-for-rhel-7-server-rpms"
   yum update -y
   ```
 
-1. Install needed prerequisite packages
+1. Install needed prerequisite packages (all cluster nodes)
   ```
   yum install -y wget git net-tools bind-utils yum-utils iptables-services bridge-utils bash-completion kexec-tools sos psacct glusterfs-fuse ntp
   ```
 
-1. Enable ntpd
+1. Enable ntpd (all cluster nodes)
   ```
   systemctl enable ntpd
   ```
 
-1. Once prerequisites are installed, reboot the node
+1. Once prerequisites are installed, reboot the node (all cluster nodes)
   ```
   systemctl reboot
   ```
@@ -86,17 +84,17 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
   yum install -y openshift-ansible
   ```
 
-  _**Note:** Load balancer nodes do not need docker so the rest of this section need not be done on lb nodes._
-1. Install docker
+1. Install docker (all cluster nodes except Ansible and LB)
   ```
   yum install -y docker-1.13.1
   ```
 
-1. Configure Docker Storage
+1. Configure Docker Storage (all cluster nodes except Ansible and LB)
   ```
+  Note: Modify the disk based on your server accordingly (use $lsblk to identify the name of the disk)
   cat > /etc/sysconfig/docker-storage-setup <<EOF
   STORAGE_DRIVER=overlay2
-  DEVS=/dev/vdb
+  DEVS=/dev/sdb
   CONTAINER_ROOT_LV_NAME=dockerlv
   CONTAINER_ROOT_LV_SIZE=100%FREE
   CONTAINER_ROOT_LV_MOUNT_PATH=/var/lib/docker
