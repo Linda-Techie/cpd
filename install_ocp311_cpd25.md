@@ -66,7 +66,7 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
 
 1. Install needed prerequisite packages (all cluster nodes)
   ```
-  yum install -y wget git net-tools bind-utils yum-utils iptables-services bridge-utils bash-completion kexec-tools sos psacct glusterfs-fuse ntp
+  yum install -y wget git net-tools bind-utils yum-utils iptables-services bridge-utils bash-completion kexec-tools sos psacct glusterfs-fuse ntp libsemanage-python
   ```
 
 1. Enable ntpd (all cluster nodes)
@@ -279,6 +279,80 @@ m[1:3].cp4d-5.csplab.local openshift_node_group_name="node-config-master-infra-c
 openshift.cp4d-5.csplab.local openshift_node_group_name="node-config-infra-crio"
 n[1:5].cp4d-5.csplab.local openshift_node_group_name="node-config-compute-crio"
   ```
+
+10. Prepare NFS server & client as needed (Optional)
+For NFS Server
+  * # yum install -y nfs-utils nfs-utils-lib
+  * # systemctl enable nfs-server
+  * # systemctl start rpcbind
+  * # systemctl start nfs-server
+  * # firewall-cmd --permanent --zone=public --add-service=nfs
+  * # firewall-cmd --permanent --zone=public --add-service=rpcbind
+  * # firewall-cmd --reload
+  
+  Prepare NFS server shared disk
+  a) lsblk
+  b) parted /dev/sdb mklabel gpt
+  c) parted -a opt /dev/sdb mkpart primary xfs 0% 100%
+  d) mkfs.xfs -f -n ftype=1 -i size=512 -n size=8192 /dev/sdb1
+  e) Create a mount drive: # mkdir /data
+  f) Modify /etc/fstab for reboot safe
+     * blkid
+     * vi /etc/fstab
+     Example:
+        [root@n1 ~]# cat /etc/fstab
+           /dev/mapper/rhel-root   /                       xfs     defaults        0 0
+           UUID=dd72311a-64e7-45ff-9afb-a150e5dbbaf9 /boot                   xfs     defaults        0 0
+           /dev/mapper/rhel-home   /home                   xfs     defaults        0 0
+           #/dev/mapper/rhel-swap   swap                    swap    defaults        0 0
+           UUID=284af079-2b6c-40af-89da-229ba79f2f52  /data  xfs  defaults,noatime    1 2
+     
+  g) mount -a
+  h) Edit /etc/exports with all cluster nodes. Example:
+     [root@n1 ~]# cat /etc/exports
+     /data 172.16.56.145(rw,sync,no_root_squash,anonuid=1000,anongid=2000) 172.16.56.146(rw,sync,no_root_squash,anonuid=1000,anongid=2000) 172.16.56.147(rw,sync,no_root_squash,anonuid=1000,anongid=2000) 172.16.56.148(rw,sync,no_root_squash,anonuid=1000,anongid=2000) 172.16.56.149(rw,sync,no_root_squash,anonuid=1000,anongid=2000) 172.16.56.150(rw,sync,no_root_squash,anonuid=1000,anongid=2000) 172.16.56.151(rw,sync,no_root_squash,anonuid=1000,anongid=2000) 172.16.56.152(rw,sync,no_root_squash,anonuid=1000,anongid=2000)
+     
+  i) Modify permission
+     chown 1000:2000 /data
+     chmod 777 /data
+  j) systemctl restart nfs.service
+  k) Test: showmount -e nfs-server.domain.com
+  
+OCP cluster nodes
+  * yum install -y nfs-utils
+
+11. Create 3 files and run with ansible-playbook
+```
+  # cat setupselinux.yaml
+  ---
+  - name: Enable SELinux
+    hosts: all
+    tasks:
+    - name: set selinux enforcing
+      selinux: state=enforcing policy=targeted
+
+  # cat setupseboolean.yaml
+  ---
+  - name: SELinux Boolean
+    hosts: all
+    tasks:
+    - name: set seboolean virt_use_nfs
+      seboolean: name=virt_use_nfs state=yes persistent=yes
+
+  #cat setvmmaxmapcount.yaml
+  ---
+  - name: Setup for Elasticsearch
+    hosts: all
+    tasks:
+    - name: set vm max map count
+      shell: sysctl -w vm.max_map_count=262144; echo "vm.max_map_count=262144" >> /etc/sysctl.conf
+
+  # ansible-playbook -i hosts setupselinux.yaml
+  # ansible-playbook -i hosts setupseboolean.yaml
+  # ansible-playbook -i hosts setvmmaxmapcount.yaml
+  
+  Reboot all nodes (except ansible node)
+ ```
 
 1. Check your installation prior to install
   ```
