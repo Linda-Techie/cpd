@@ -317,16 +317,24 @@ For NFS Server
            UUID=284af079-2b6c-40af-89da-229ba79f2f52  /data  xfs  defaults,noatime    1 2
   ```   
   g) mount -a
+  
   h) Edit /etc/exports with all cluster nodes. Example:
      [root@n1 ~]# cat /etc/exports
      /data 172.16.56.145(rw,sync,no_root_squash,anonuid=1000,anongid=2000) 172.16.56.146(rw,sync,no_root_squash,anonuid=1000,anongid=2000) 172.16.56.147(rw,sync,no_root_squash,anonuid=1000,anongid=2000) 172.16.56.148(rw,sync,no_root_squash,anonuid=1000,anongid=2000) 172.16.56.149(rw,sync,no_root_squash,anonuid=1000,anongid=2000) 172.16.56.150(rw,sync,no_root_squash,anonuid=1000,anongid=2000) 172.16.56.151(rw,sync,no_root_squash,anonuid=1000,anongid=2000) 172.16.56.152(rw,sync,no_root_squash,anonuid=1000,anongid=2000)
      
   i) Modify permission
+  ```
      chown 1000:2000 /data
      chmod 777 /data
-  j) systemctl restart nfs.service
-  k) Test: showmount -e nfs-server.domain.com
-  
+  ```
+  j) Restart service
+  ```
+     systemctl restart nfs.service
+  ```
+  k) Test: 
+  ```
+  showmount -e nfs-server.domain.com
+  ```
 OCP cluster nodes
   * yum install -y nfs-utils
 
@@ -413,93 +421,6 @@ openshift	IN	CNAME	master-lb
 ### Login to OCP Console
 URL: https://openshift.cp4d.csplab.local:8443
 
-If you configured LDAP authentication in your inventory file, you should be able to login with a valid LDAP user and you can skip this step.  If you used htpasswd authentication, however, you will need to create a user so you can login.
-
-1. Add a new htpasswd user
-  ```
-  [root@ansible openshift-ansible]# ssh master1
-
-  [root@master1 ~]# cd /etc/origin/master
-
-  [root@master1 master]# htpasswd -c ./users.htpasswd sysadmin
-  ```
-
-2. Copy the htpasswd file to the other master nodes
-  ```
-  [root@master1 master]# scp users.htpasswd master2:/etc/origin/master/
-
-  [root@master1 master]# scp users.htpasswd master3:/etc/origin/master/
-  ```
-
-### Configure a wildcard domain in bind (DNS)
-
-Before you can access your cluster console or apps deployed to your subdomain, you must configure your DNS to forward all requests to for in the configured subdomain (apps.mydomain.local in this case) to your infra nodes.
-
-You will also need to configure your second load balancer (infra-lb) to load balance traffic to your infra nodes.
-
-1.  Configure the second load balancer to load balance traffic to your infra nodes.
-
-  When you configured two nodes in the [lb] stanza, it created two load balancer nodes for you and installed haproxy on those nodes.  Both nodes were configured as load balancers with an ingress IP address of the node's IP and load balancing across each of the three master nodes defined in the [master] stanza.
-
-  We want the first load balancer (master-lb) to remain as it is because that is how we will access the OpenShift UI.
-
-  The second load balancer (infra-lb), however, will need to be reconfigured to load balance traffic aross your infra nodes.
-
-  ssh to your infra-lb node and edit the file /etc/haproxy/haproxy.cfg.
-
-  You should find a section at the bottom that looks something like this:
-
-  ```
-  backend atomic-openshift-api
-    balance source
-    mode tcp
-    server      master0 10.10.0.1:443 check
-    server      master1 10.10.0.2:443 check
-    server      master2 10.10.0.3:443 check
-  ```
-
-  Change the server lines to point to your infra nodes instead.  The result should look something like this:
-
-  ```
-  backend atomic-openshift-api
-    balance source
-    mode tcp
-    server      infra0 10.10.0.4:443 check
-    server      infra1 10.10.0.5:443 check
-    server      infra2 10.10.0.6:443 check
-  ```
-
-  Save your file and restart your haproxy service
-
-  ```
-  systemctl restart haproxy
-  ```
-
-2. Configure a wildcard domain record in your DNS to point to your infra load balancer
-
-  When configured correctly all queries for any hostname in the apps.mydomain.local domain should return the IP address of your infra-lb node.
-
-  In bind9, the entry should look something like this:
-
-  ```
-  *.apps.mydomain.local.		IN	A	10.10.0.7
-  ```
-
-  Where 10.10.0.7 is the IP address of the infra-lb node.
-
-  Update the serial number of your db file and restart bind9 for your changes to take affect.
-
-  Test your updates by executing something like:
-
-  ```
-  nslookup whatever.apps.mydomain.local
-  ```
-
-  Querying any host in the apps.mydomain.local domain should return the value of your A record above: 10.10.0.7 in this case.
-
-  Login to your OpenShift UI and at the top of the page you should see "OpenShift Container Platform" and right next to it "Service Catalog" with a down arrow.  Click the arrow and change your perspective to "Cluster Console".
-
-  If all of your configuration efforts have been successful, you should see the cluster console.  If anything went wrong, your page will fail to load with a not found error; check your load balancer configuration and DNS configuration for any mistakes.
 
 ### Setting up your cluster for use
 
