@@ -1,4 +1,5 @@
-# Note: Initial Clone from Victor's doc, This is not intend to supercede the original notes. Modify & Additions in the following list
+# Note: Initial Clone from Victor's doc, This is not intend to supercede the original notes but use it as a cookbook. 
+Modify & Additions in the following list
   * Remove all information knowledge from the original. This doc is intended to be a cookbook style without detail info.
   * Portworx
   * CPD
