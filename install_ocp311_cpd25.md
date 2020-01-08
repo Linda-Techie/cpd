@@ -67,7 +67,7 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
 
 8. Install needed prerequisite packages (all cluster nodes)
   ```
-  yum install -y wget git net-tools bind-utils yum-utils iptables-services bridge-utils bash-completion kexec-tools sos psacct glusterfs-fuse ntp libsemanage-python
+  yum install -y wget git net-tools bind-utils yum-utils iptables-services bridge-utils bash-completion kexec-tools sos psacct glusterfs-fuse ntp libsemanage-python python-setuptools python-websocket-client
   ```
 
 9. Enable ntpd (all cluster nodes)
