@@ -371,32 +371,8 @@ OCP cluster nodes
 
 22. Deploy the cluster
   ```
-  [root@ansible openshift-ansible]# ansible-playbook -i hosts /usr/share/ansible/openshift-ansible/playbooks/deploy_cluster.yml -vvv  
+  [root@ansible openshift-ansible]# ansible-playbook -i hosts /usr/share/ansible/openshift-ansible/playbooks/deploy_cluster.yml -vvv | tee install.log
   
-  ```
-
-  **Note:** This author found that the installer failed for random reasons during depl-vvv o
-  
-  y.  After each failure, however, is a log message providing an ansible playbook to launch to retry this specific recipe (rather than the full install).
-
-  If the failure message indicates an issue that can be easily remediated (a misconfiguration), remediate your installation and retry the deploy_cluster playbook.
-
-  If the error message indicates a 503 error, success might be achieved by running just the failed playbook as a stand-alone deployment, and after success, re-launch the deploy_cluster playbook and continue doing so as long as you get further along the process and until ultimate success.
-
-  ```
-  INSTALLER STATUS *******************************************************************************************************************************************
-  Initialization              : Complete (0:01:10)
-  Health Check                : Complete (0:00:14)
-  Node Bootstrap Preparation  : Complete (0:06:40)
-  etcd Install                : Complete (0:02:04)
-  Load Balancer Install       : Complete (0:00:53)
-  Master Install              : Complete (0:06:37)
-  Master Additional Install   : Complete (0:04:43)
-  Node Join                   : Complete (0:01:44)
-  GlusterFS Install           : In Progress (0:02:02)
-  	This phase can be restarted by running: playbooks/openshift-glusterfs/new_install.yml
-  Thursday 21 February 2019  11:18:14 -0600 (0:00:05.127)       0:26:07.595 *****
-  ===============================================================================
   ```
 
 ## Configure your new cluster
@@ -411,7 +387,30 @@ In bind9, that entry would look something like this:
 openshift	IN	CNAME	master-lb
 ```
 
-### Adding users via htpasswd
+### Configure new cluster
+1. ssh to master1
+
+2. login to master1
+```
+   ssh master1
+   oc login -u system:admin
+```
+3. create user "ocadmin"
+```
+   cd /etc/origin/master;htpasswd -b htpasswd ocadmin ocadmin
+```
+4. Set ocadmin to cluster's admin
+```
+   oc adm policy add-cluster-role-to-user cluster-admin ocadmin
+```
+
+5. Verify ocadmin login
+```
+   oc login --username=ocadmin --password=ocadmin --insecure-skip-tls-verify
+```
+
+### Login to OCP Console
+URL: https://openshift.cp4d.csplab.local:8443
 
 If you configured LDAP authentication in your inventory file, you should be able to login with a valid LDAP user and you can skip this step.  If you used htpasswd authentication, however, you will need to create a user so you can login.
 
