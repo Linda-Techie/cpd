@@ -38,7 +38,7 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
   ```
   Accept all of the default values
 
-1. Copy the root id_rsa.pub key to all other nodes
+5. Copy the root id_rsa.pub key to all other nodes
   ```
   ssh-copy-id -i ~/.ssh/id_rsa.pub master1.cp4d.csplab.local
   ssh-copy-id -i ~/.ssh/id_rsa.pub master2.cp4d.csplab.local
@@ -50,7 +50,7 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
   ssh-copy-id -i ~/.ssh/id_rsa.pub node5.cp4d.csplab.local
   ```
 
-1. Install Red Hat Subscriptions (all cluster nodes)
+6. Install Red Hat Subscriptions (all cluster nodes)
   ```
   subscription-manager repos --disable="*"  # Remove existing Subscriptions
   subscription-manager register --username=<RedHat-UserID> --password=<RedHat-Password> # Register the node with Red Hat
@@ -58,38 +58,38 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
   subscription-manager attach --pool=<poolID>  # Pool with entitlement to RHOS
   ```
 
-1. Enable the needed yum repositories (all cluster nodes)
+7. Enable the needed yum repositories (all cluster nodes)
   ```
   subscription-manager repos --enable="rhel-7-server-rpms" --enable="rhel-7-server-extras-rpms" --enable="rhel-7-server-ose-3.11-rpms"  --enable="rh-gluster-3-client-for-rhel-7-server-rpms"
   yum update -y
   ```
 
-1. Install needed prerequisite packages (all cluster nodes)
+8. Install needed prerequisite packages (all cluster nodes)
   ```
   yum install -y wget git net-tools bind-utils yum-utils iptables-services bridge-utils bash-completion kexec-tools sos psacct glusterfs-fuse ntp libsemanage-python
   ```
 
-1. Enable ntpd (all cluster nodes)
+9. Enable ntpd (all cluster nodes)
   ```
   systemctl enable ntpd
   ```
 
-1. Once prerequisites are installed, reboot the node (all cluster nodes)
+10. Once prerequisites are installed, reboot the node (all cluster nodes)
   ```
   systemctl reboot
   ```
 
-1. Install openshift-ansible package (on ansible node only)
+11. Install openshift-ansible package (on ansible node only)
   ```
   yum install -y openshift-ansible
   ```
 
-1. Install docker (all cluster nodes except Ansible and LB)
+12. Install docker (all cluster nodes except Ansible and LB)
   ```
   yum install -y docker-1.13.1
   ```
 
-1. Configure Docker Storage (all cluster nodes except Ansible and LB)
+13. Configure Docker Storage (all cluster nodes except Ansible and LB)
   ```
   Note: Modify the disk based on your server accordingly (use $lsblk to identify the name of the disk)
   cat > /etc/sysconfig/docker-storage-setup <<EOF
@@ -103,17 +103,17 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
   ```
   This will create a new file named `docker-storage-setup` in /etc/sysconfig.  DEVS should contain the raw device which should be used for the docker partition.  The raw disk will be configured for Logical Volume Mapping (LVM) and mounted at the location specified by `CONTAINER_ROOT_LV_MOUNT_PATH`, this specified location is the default location for the docker local registry.<br><br>The value in `DEVS` should be the second raw disk in the system (e.g. /dev/sdb or /dev/vdb).  This value should be the raw disk device and should not have a partition.
 
-1. Enable docker to be auto-started with the system
+14. Enable docker to be auto-started with the system
   ```
   systemctl enable docker
   ```
 
-1. Start docker
+15. Start docker
   ```
   systemctl start docker
   ```
 
-1. Check to make sure docker is running properly
+16. Check to make sure docker is running properly
   ```
   rpm -V docker-1.13.1
   docker version
@@ -148,7 +148,7 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
   ```
   If you don't get similar results, make sure docker is running using the `systemctl restart docker` command.
 
-1. Ensure the newly created docker volume is properly mounted
+17. Ensure the newly created docker volume is properly mounted
   ```
   [root@m1 ~]# df -Th
   Filesystem                    Type      Size  Used Avail Use% Mounted on
@@ -169,7 +169,7 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
 ## Install Red Hat OpenShift Enterprise (OSE)
 **Note:** The following should only be done on the ansible (installer) node.
 
-1. Edit the file at /etc/ansible/hosts and add the below stanzas making updates as is needed for your implementation
+18. Edit the file at /etc/ansible/hosts and add the below stanzas making updates as is needed for your implementation
   ```
   Note: 
   a) For Portworx
@@ -280,7 +280,7 @@ openshift.cp4d-5.csplab.local openshift_node_group_name="node-config-infra-crio"
 n[1:5].cp4d-5.csplab.local openshift_node_group_name="node-config-compute-crio"
   ```
 
-10. Prepare NFS server & client as needed (Optional)
+19. Prepare NFS server & client as needed (Optional)
 
 For NFS Server
   * yum install -y nfs-utils nfs-utils-lib
@@ -304,15 +304,17 @@ For NFS Server
   e) Create a mount drive: # mkdir /data
   
   f) Modify /etc/fstab for reboot safe
+  ```
      * blkid
      * vi /etc/fstab
+     
      Example:
         [root@n1 ~]# cat /etc/fstab
            /dev/mapper/rhel-root   /                       xfs     defaults        0 0
-           UUID=dd72311a-64e7-45ff-9afb-a150e5dbbaf9 /boot                   xfs     defaults        0 0
+           UUID=dd72311a-64e7-45ff-9afb-a150e5dbbaf9 /boot                   xfs     defaults        0 0      
            /dev/mapper/rhel-home   /home                   xfs     defaults        0 0
            UUID=284af079-2b6c-40af-89da-229ba79f2f52  /data  xfs  defaults,noatime    1 2
-     
+  ```   
   g) mount -a
   h) Edit /etc/exports with all cluster nodes. Example:
      [root@n1 ~]# cat /etc/exports
@@ -327,7 +329,7 @@ For NFS Server
 OCP cluster nodes
   * yum install -y nfs-utils
 
-11. Create 3 files and run with ansible-playbook
+20. Create 3 files and run with ansible-playbook
 ```
   # cat setupselinux.yaml
   ---
@@ -360,19 +362,22 @@ OCP cluster nodes
   Reboot all nodes (except ansible node)
  ```
 
-1. Check your installation prior to install
+21. Check your installation prior to install
   ```
   [root@ansible ~]# cd /usr/share/ansible/openshift-ansible
 
   [root@ansible openshift-ansible]# ansible-playbook playbooks/prerequisites.yml
   ```
 
-1. Deploy the cluster
+22. Deploy the cluster
   ```
-  [root@ansible openshift-ansible]# ansible-playbook playbooks/deploy_cluster.yml
+  [root@ansible openshift-ansible]# ansible-playbook -i hosts /usr/share/ansible/openshift-ansible/playbooks/deploy_cluster.yml -vvv  
+  
   ```
 
-  **Note:** This author found that the installer failed for random reasons during deploy.  After each failure, however, is a log message providing an ansible playbook to launch to retry this specific recipe (rather than the full install).
+  **Note:** This author found that the installer failed for random reasons during depl-vvv o
+  
+  y.  After each failure, however, is a log message providing an ansible playbook to launch to retry this specific recipe (rather than the full install).
 
   If the failure message indicates an issue that can be easily remediated (a misconfiguration), remediate your installation and retry the deploy_cluster playbook.
 
