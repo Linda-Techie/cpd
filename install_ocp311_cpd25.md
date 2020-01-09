@@ -1,10 +1,10 @@
-# Note: Initial Clone from Victor's doc, This is not intend to supercede the original notes but use it as a cookbook. 
-Modify & Additions in the following list
-  * Remove all information knowledge from the original. This doc is intended to be a cookbook style without detail info.
+# Note: The baseline of OCP content originally from Victor Havard. This doc is intented to use as a cookbook and labs. 
+
+## Table Content
   * Portworx
   * CPD
 
-## Infrastructure Footprint
+## Doc is tested with following cluster spec 
 
 For this exercise, the following nodes will be deployed (non-HA instances will only need one of each node type):
 
@@ -33,7 +33,7 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
 4. Configure passwordless SSH between the ansible (installer) node and all other nodes.
   ```
   sudo ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa  # That is two single quotes
-  sudo cat ~/.ssh/id_rsa.put >> ~/.ssh/authorized_keys
+  sudo cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
   sudo chmod 700 ~/.ssh
   sudo chmod 0600 ~/.ssh/authorized_keys
   ```
@@ -67,7 +67,7 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
 
 8. Install needed prerequisite packages (all cluster nodes)
   ```
-  yum install -y wget git net-tools bind-utils yum-utils iptables-services bridge-utils bash-completion kexec-tools sos psacct glusterfs-fuse ntp libsemanage-python python-setuptools python-websocket-client
+  yum install -y wget git net-tools bind-utils yum-utils iptables-services bridge-utils bash-completion kexec-tools sos psacct glusterfs-fuse ntp libsemanage-python python-setuptools python-websocket-client nfs-utils
   ```
 
 9. Enable ntpd (all cluster nodes)
