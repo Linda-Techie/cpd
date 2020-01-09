@@ -524,3 +524,12 @@ URL: https://openshift.cp4d.csplab.local:8443
      volumeBindingMode: Immediate
      EOF
      ```
+ 10. Verify Portworx deployement
+     ```
+     kubectl get pods -o wide -n kube-system -l name=portworx
+     oc get pods -n kube-system | grep port
+     ```
+ 11. 
+ 
+# CPD Base installation
+  1. 
