@@ -69,9 +69,7 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
 
 8. Install needed prerequisite packages (all cluster nodes)
   ```
-  yum install -y wget git net-tools bind-utils yum-utils iptables-services bridge-utils bash-completion kexec-tools sos psacct glusterfs-fuse ntp libsemanage-python python-setuptools python-websocket-client nfs-utils 
-  
-  yum install unzip podman (ansible node only)
+  yum install -y wget git net-tools bind-utils yum-utils iptables-services bridge-utils bash-completion kexec-tools sos psacct glusterfs-fuse ntp libsemanage-python python-setuptools python-websocket-client nfs-utils unzip podman
   ```
 
 9. Enable ntpd (all cluster nodes)
@@ -493,5 +491,36 @@ URL: https://openshift.cp4d.csplab.local:8443
      ```
      bin/px-util initialize --sshKeyFile ~/.ssh/id_rsa
      ```
-  6. 
-  
+  6. Load Portworx images onto all cluster nodes
+     ```
+     bin/px-images.sh -e 'ssh -o StrictHostKeyChecking=no -l root' -d /tmp/cpd-px-images load
+     ```
+  7. Deploy the Portworx services
+     ```
+     bin/px-install.sh -pp Never install #Never argument meant no need to access external registries for the images
+     ```
+  8. Verify that Portworx has been deployed correctly. You should be looking for "PX is operational" message as a successful deployment.
+     '''
+     a) Login to a cluster node other than Load balancer and Ansible node
+     b) Run following command
+     
+        PX_POD=$(kubectl get pods -l name=portworx -n kube-system -o jsonpath='{.items[0].metadata.name}')
+        kubectl exec $PX_POD -n kube-system -- /opt/pwx/bin/pxctl status
+     '''
+  9. Create Portworx storage class
+     ```
+     #Shared-sc for cpd-lite
+     cat <<EOF | oc create -f -
+     kind: StorageClass
+     apiVersion: storage.k8s.io/v1
+     metadata:
+      name: portworx-shared-sc
+     provisioner: kubernetes.io/portworx-volume
+     parameters:
+      repl: "1"
+      priority_io: "high"
+      shared: "true"
+     allowVolumeExpansion: true
+     volumeBindingMode: Immediate
+     EOF
+     ```
