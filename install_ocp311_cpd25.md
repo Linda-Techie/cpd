@@ -1,10 +1,11 @@
-# Note: The baseline of OCP content originally from Victor Havard. This doc is intented to be used as a cookbook and labs. 
+# Note: The baseline of OCP content is originally from Victor Havard. This doc is intented to be used as a cookbook and labs, the detail knowledge and explanation sections were removed, also extra content were added primarily for Cloud Pak for Data practice. 
 
 ## Table Content
-  * OCP v3.11
-  * Storage: NFS + Portworx
-  * CPD v2.5
-  * Addon: Watson 
+  * OCP v3.11 installation
+  * Setup extra storage type on OCP: NFS + Portworx
+  * CPD v2.5 installation
+  * CPD v2.5 addon components: Analytics engine, Spark, SPSS, Analytics dashboard, Data Stage, OpenScale, Watson Studio, Watson Knowledge Studio, Watson Knowledge Catalog, Data Virtualization, DB2 Warehouse, Jupyter notebook with R 3.6, Open Source management, RStudio
+  * CPD v2.5 cartriages Watson Assistant, Watson Discovery 
 
 ## Document is based on and tested with following cluster spec 
 
