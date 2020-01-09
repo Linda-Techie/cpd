@@ -1,10 +1,12 @@
-# Note: The baseline of OCP content originally from Victor Havard. This doc is intented to use as a cookbook and labs. 
+# Note: The baseline of OCP content originally from Victor Havard. This doc is intented to be used as a cookbook and labs. 
 
 ## Table Content
-  * Portworx
-  * CPD
+  * OCP v3.11
+  * Storage: NFS + Portworx
+  * CPD v2.5
+  * Addon: Watson 
 
-## Doc is tested with following cluster spec 
+## Document is based on and tested with following cluster spec 
 
 For this exercise, the following nodes will be deployed (non-HA instances will only need one of each node type):
 
@@ -67,7 +69,9 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
 
 8. Install needed prerequisite packages (all cluster nodes)
   ```
-  yum install -y wget git net-tools bind-utils yum-utils iptables-services bridge-utils bash-completion kexec-tools sos psacct glusterfs-fuse ntp libsemanage-python python-setuptools python-websocket-client nfs-utils
+  yum install -y wget git net-tools bind-utils yum-utils iptables-services bridge-utils bash-completion kexec-tools sos psacct glusterfs-fuse ntp libsemanage-python python-setuptools python-websocket-client nfs-utils 
+  
+  yum install unzip podman (ansible node only)
   ```
 
 9. Enable ntpd (all cluster nodes)
@@ -467,3 +471,27 @@ URL: https://openshift.cp4d.csplab.local:8443
   Where `vhavard` is the userid of a valid user from LDAP or htpasswd.
 
   Now login to the web UI with your cluster admin user and see the difference from a normal user.
+  
+  # Install Portworx
+  1. Download Software 
+     Part number: CC3Y1ML
+     
+  2. Extract software
+     ```
+     tar zxvf cloudpak4data-ee-v2.5.0.0.tgz
+     tar zxvf cpd-portworx.tgz
+     ```
+  3. Download Portworx images (~
+     ```
+     mkdir -p /tmp/cpd-px-images
+     cd cpd/cpd-portworx
+     bin/px-images.sh -d /tmp/cpd-px-images download
+     ```
+  4. Login to OCP Cluster via command or token
+  
+  5. Apply the Portworx cloud Pak for data activation on OCP nodes
+     ```
+     bin/px-util initialize --sshKeyFile ~/.ssh/id_rsa
+     ```
+  6. 
+  
