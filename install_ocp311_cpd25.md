@@ -11,19 +11,19 @@
 
 For this exercise, the following nodes will be deployed (non-HA instances will only need one of each node type):
 
-|    Node         |  Host   | Storage      | vCPU  | Memory |
-|:--------------- |:-------:|:------------ |:----: |:------:|
-| ansible         | ansible | 100,100      |   4   |    8   |
-| lb-infra        | lb      | 100          |   4   |    8   |
-| master1+infra   | master1 | 100,200      |  16   |   64   |
-| master2+infra   | master2 | 100,200      |  16   |   64   |
-| master3+infra   | master3 | 100,200      |  16   |   64   |
-| worker1         | node1   | 100,200,200  |   8   |   32   |
-| worker2         | node2   | 100,200,200  |   8   |   32   |
-| worker3         | node3   | 100,200,200  |   8   |   32   |
-| worker4         | node4   | 100,200,200  |   8   |   32   |
-| worker5         | node5   | 100,200,200  |   8   |   32   |
-
+|    Node         |  Host     | Storage      | vCPU  | Memory |
+|:--------------- |:---------:|:------------ |:----: |:------:|
+| lb-master       | openshift | 100          |   4   |    8   |
+| lb-infra        | infra-lb  | 100          |   4   |    8   |
+| master1+infra   | master1   | 100,200      |  16   |   64   |
+| master2+infra   | master2   | 100,200      |  16   |   64   |
+| master3+infra   | master3   | 100,200      |  16   |   64   |
+| worker1         | node1     | 100,200,200  |   8   |   32   |
+| worker2         | node2     | 100,200,200  |   8   |   32   |
+| worker3         | node3     | 100,200,200  |   8   |   32   |
+| worker4         | node4     | 100,200,200  |   8   |   32   |
+| worker5         | node5     | 100,200,200  |   8   |   32   |
+| storage         | storage   | 100,100      |   4   |    8   |
 
 ## Prepare Nodes for Installation
 
