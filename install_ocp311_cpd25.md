@@ -174,7 +174,6 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
 **Note:** The following should only be done on the ansible (installer) node.
 
 18. Edit the file at /etc/ansible/hosts and add the below stanzas making updates as is needed for your implementation
-  ```
   Note: 
   a) For Portworx
      Add
@@ -194,10 +193,11 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
      * [nfs] section 
      * openshift_hosted_registry_storage_nfs_directory=/data #Your mount drive
      * openshift_hosted_registry_storage_nfs_options='*(rw,no_root_squash,anonuid=1000,anongid=2000)' # Don't worry about the uid & gid
-  
+
+  ```
   ### OSE Inventory File
-  # For more information see: https://docs.openshift.com/container-platform/3.11/install/configuring_inventory_file.html#configuring-ansible
-  # This section defines the types of nodes we will deploy
+# For more information see: https://docs.openshift.com/container-platform/3.11/install/configuring_inventory_file.html#configuring-ansible
+# This section defines the types of nodes we will deploy
 # define openshift components
 [OSEv3:children]
 masters
@@ -264,6 +264,7 @@ m3.cp4d-5.csplab.local
 # load balancer
 [lb]
 openshift.cp4d-5.csplab.local
+infra-lb.cp4d-5.csplab.local
 
 # The value in the square brackets should indicate the raw disk to use for GlusterFS bricks.
 # # These shoudld be raw disks and have no partitions defined.  If you have multiple
@@ -275,13 +276,16 @@ openshift.cp4d-5.csplab.local
 
 # nfs server
 [nfs]
-n1.cp4d-5.csplab.local
+nfs.cp4d-5.csplab.local
 
 # All nodes and their respective node types
 [nodes]
 m[1:3].cp4d-5.csplab.local openshift_node_group_name="node-config-master-infra-crio"
 openshift.cp4d-5.csplab.local openshift_node_group_name="node-config-infra-crio"
 n[1:5].cp4d-5.csplab.local openshift_node_group_name="node-config-compute-crio"
+storage.cp4d-5.csplab.local openshift_node_group_name="node-config-storage-crio"
+[root@openshift linda]#
+
   ```
 
 19. Prepare NFS server & client as needed (Optional)
