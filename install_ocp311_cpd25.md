@@ -58,14 +58,14 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
   ```
   subscription-manager repos --disable="*"  # Remove existing Subscriptions
   subscription-manager register --username=<RedHat-UserID> --password=<RedHat-Password> # Register the node with Red Hat
-  subscription-manager refresh
   subscription-manager attach --pool=<poolID>  # Pool with entitlement to RHOS
   ```
 
 7. Enable the needed yum repositories (all cluster nodes)
   ```
   subscription-manager repos --enable="rhel-7-server-rpms" --enable="rhel-7-server-extras-rpms" --enable="rhel-7-server-ose-3.11-rpms"  --enable="rh-gluster-3-client-for-rhel-7-server-rpms"
-  yum update -y
+  subscription-manager refresh
+  yum repolist; yum update -y
   ```
 
 8. Install needed prerequisite packages (all cluster nodes)
@@ -283,7 +283,6 @@ nfs.cp4d-5.csplab.local
 m[1:3].cp4d-5.csplab.local openshift_node_group_name="node-config-master-infra-crio"
 openshift.cp4d-5.csplab.local openshift_node_group_name="node-config-infra-crio"
 n[1:5].cp4d-5.csplab.local openshift_node_group_name="node-config-compute-crio"
-storage.cp4d-5.csplab.local openshift_node_group_name="node-config-storage-crio"
 [root@openshift linda]#
 
   ```
@@ -378,14 +377,12 @@ OCP cluster nodes
   Reboot all nodes (except ansible node)
  ```
 
-21. Check your installation prior to install
+21. Check your installation prior to install (~20 minutes)
   ```
-  [root@ansible ~]# cd /usr/share/ansible/openshift-ansible
-
-  [root@ansible openshift-ansible]# ansible-playbook playbooks/prerequisites.yml
+  [root@ansible openshift-ansible]# ansible-playbook -i hosts /usr/share/ansible/openshift-ansible/playbooks/prerequisites.yml
   ```
 
-22. Deploy the cluster
+22. Deploy the cluster (~60 minutes)
   ```
   [root@ansible openshift-ansible]# ansible-playbook -i hosts /usr/share/ansible/openshift-ansible/playbooks/deploy_cluster.yml -vvv | tee install.log
   
@@ -481,6 +478,8 @@ URL: https://openshift.cp4d.csplab.local:8443
      
   2. Extract software
      ```
+     chmod +x CP4D_EE_Installer_V2.5.bin
+     ./CP4D_EE_Installer_V2.5.bin
      tar zxvf cloudpak4data-ee-v2.5.0.0.tgz
      tar zxvf cpd-portworx.tgz
      ```
