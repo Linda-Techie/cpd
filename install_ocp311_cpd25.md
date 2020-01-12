@@ -33,7 +33,7 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
 
 2. No partition on the 2nd and/or 3rd disks for all masters and workers
 3. NFS server disk should have partitioned and formatted with xfs
-4. Configure passwordless SSH between the ansible (installer) node and all other nodes.
+4. Configure passwordless SSH between the ansible (installer) node and master 1 node
   ```
   sudo ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa  # That is two single quotes
   sudo cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
@@ -283,6 +283,7 @@ nfs.cp4d-5.csplab.local
 m[1:3].cp4d-5.csplab.local openshift_node_group_name="node-config-master-infra-crio"
 openshift.cp4d-5.csplab.local openshift_node_group_name="node-config-infra-crio"
 n[1:5].cp4d-5.csplab.local openshift_node_group_name="node-config-compute-crio"
+storage.cp4d-5.csplab.local openshift_node_group_name="node-config-compute-crio"
 [root@openshift linda]#
 
   ```
@@ -433,6 +434,25 @@ URL: https://openshift.cp4d.csplab.local:8443
   Before you can do anything else, you must login the first time with the `oc` command and assign a user the cluster-admin role.  ssh to one of your master nodes and execute the following command:
   ```
   oc login -u system:admin
+  # create <namespace> SCC
+oc create -f /root/zen-scc.yaml
+
+# create project <namespace> under ocadmin
+oc login -u ocadmin -p ocadmin
+oc new-project <namespace>
+
+# add role and SCC to <namespace> SA
+oc login -u system:admin
+oc adm policy add-scc-to-user zen-scc system:serviceaccount:<namespace>:default
+oc adm policy add-role-to-user admin system:serviceaccount:<namespace>:default
+oc policy add-role-to-user cluster-admin ocadmin
+oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:<namespace>:default
+oc adm policy add-cluster-role-to-user cluster-admin ocadmin
+
+# log in final time
+oc login -u ocadmin -p ocadmin
+docker login -u $(oc whoami) -p $(oc whoami -t) docker-registry.default.svc:5000
+
   ```
 
   If it worked correctly you should be able to execute commands
@@ -447,32 +467,17 @@ URL: https://openshift.cp4d.csplab.local:8443
 
   ```
 
-  * Create a cluster administrator user
-
-  If you configured an LDAP identity provider in your inventory file you will already have users available to configure and those user should be able to successfully login.
-
-  If you used the htpasswd identity provider and have not already done so, see above for instructions on creating a new htpasswd user.
-
-  To login to the web UI, point your browser to the hostname from the value you specified in your inventory for **openshift_master_cluster_public_hostname**, in this case: https://openshift.mydomain.local.
-
-  If you chose a port other than 443, you will have to add the port number as well (e.g. https://openshift.mydomain.com:8443).
-
-  Login with the credentials you just created and look around.  This is the user interface for a normal user.
-
-  When you are done, log back out of the web UI.
-
-  * Assign a user to be the cluster-admin
-
-  From the command line on a master node, execute the following command:
+## Install Helm
   ```
-  [root@master1 ~]# oc adm policy add-cluster-role-to-user cluster-admin vhavard
-  cluster role "cluster-admin" added: "vhavard"
-  ```
-  Where `vhavard` is the userid of a valid user from LDAP or htpasswd.
+  a) Install: ./helm_install.sh
+  b) Verify: helm version --tls --tiller-namespace=tiller
+     Expected result
+     Client: &version.Version{SemVer:"v2.9.1", GitCommit:"20adb27c7c5868466912eebdf6664e7390ebe710", GitTreeState:"clean"}
+     Server: &version.Version{SemVer:"v2.9.1", GitCommit:"20adb27c7c5868466912eebdf6664e7390ebe710", GitTreeState:"clean"}
 
-  Now login to the web UI with your cluster admin user and see the difference from a normal user.
+  ```
   
-  # Install Portworx
+## Install Portworx
   1. Download Software 
      Part number: CC3Y1ML
      
@@ -489,6 +494,47 @@ URL: https://openshift.cp4d.csplab.local:8443
      cd cpd/cpd-portworx
      bin/px-images.sh -d /tmp/cpd-px-images download
      ```
+  4. Label nodes where you want Portworx to run
+     ```     
+     oc label node n1.cp4d-5.csplab.local node-role.kubernetes.io/compute=true
+     oc label node n2.cp4d-5.csplab.local node-role.kubernetes.io/compute=true
+     oc label node n3.cp4d-5.csplab.local node-role.kubernetes.io/compute=true
+     oc label node n4.cp4d-5.csplab.local node-role.kubernetes.io/compute=true
+     oc label node n5.cp4d-5.csplab.local node-role.kubernetes.io/compute=true
+     oc label node storage.cp4d-5.csplab.local node-role.kubernetes.io/compute=true
+     ```
+  5. Enable Daemonsets on all nodes in kube-system namespace
+  ```
+     oc patch namespace kube-system -p '{"metadata": {"annotations": {"openshift.io/node-selector": ""}}}'
+  ```
+  6. Export Kubernetes version
+  ```
+  export KBVER=$(kubectl version --short | awk -Fv '/Server Version: / {print $3}')
+  ```
+  7. Pull Portworx images
+  ```
+     a) From Master node
+        PX_IMGS="$(curl -fsSL "https://install.portworx.com/2.1/?kbver=$KBVER&type=oci&lh=true&ctl=true&stork=true&csi=true" | awk '/image: /{print $2}' | sort -u)"
+        PX_IMGS="$PX_IMGS portworx/talisman:latest portworx/px-node-wiper:2.0.2.1"
+        PX_ENT=$(echo "$PX_IMGS" | sed 's|^portworx/oci-monitor:|portworx/px-enterprise:|p;d')
+        echo $PX_IMGS $PX_ENT > /tmp/px_img_out.txt
+  
+     b) SCP file /tmp/px_img_out.txt to all "WROKERS" nodes
+   
+     c) From the worker nodes where Portworx will be installed:
+        PX_ALL_IMGS="$(cat /tmp/px_img_out.txt)"
+        echo $PX_ALL_IMGS | xargs -n1 docker pull
+
+  ```
+  8. Update privilegies for Portworx
+     ```
+     oc adm policy add-scc-to-user privileged system:serviceaccount:kube-system:px-account
+     oc adm policy add-scc-to-user privileged system:serviceaccount:kube-system:portworx-pvc-controller-account
+     oc adm policy add-scc-to-user privileged system:serviceaccount:kube-system:px-lh-account
+     oc adm policy add-scc-to-user anyuid system:serviceaccount:kube-system:px-lh-account
+     oc adm policy add-scc-to-user anyuid system:serviceaccount:default:default
+     oc adm policy add-scc-to-user privileged system:serviceaccount:kube-system:px-csi-account
+     ```
   4. Login to OCP Cluster via command or token
   
   5. Apply the Portworx cloud Pak for data activation on OCP nodes
@@ -503,40 +549,42 @@ URL: https://openshift.cp4d.csplab.local:8443
      ```
      bin/px-install.sh -pp Never install #Never argument meant no need to access external registries for the images
      ```
-  8. Verify that Portworx has been deployed correctly. You should be looking for "PX is operational" message as a successful deployment.
+  8. Define Portworx Storage Classes
+
+     ```
+     bin/px-sc.sh
+     ```  
+  9. Verify that Portworx has been deployed correctly. You should be looking for "PX is operational" message as a successful deployment.
      '''
      a) Login to a cluster node other than Load balancer and Ansible node
      b) Run following command
      
         PX_POD=$(kubectl get pods -l name=portworx -n kube-system -o jsonpath='{.items[0].metadata.name}')
+        oc get pods -n kube-system | grep port
+        podman images |grep portworx
         kubectl exec $PX_POD -n kube-system -- /opt/pwx/bin/pxctl status
+        
      '''
-  9. Create Portworx storage class
+ 10. Test PV use Portworx storage class
      ```
-     #Shared-sc for cpd-lite
-     cat <<EOF | oc create -f -
-     kind: StorageClass
-     apiVersion: storage.k8s.io/v1
-     metadata:
-      name: portworx-shared-sc
-     provisioner: kubernetes.io/portworx-volume
-     parameters:
-      repl: "1"
-      priority_io: "high"
-      shared: "true"
-     allowVolumeExpansion: true
-     volumeBindingMode: Immediate
-     EOF
-     ```
- 10. Verify Portworx deployement
-     ```
-     kubectl get pods -o wide -n kube-system -l name=portworx
-     oc get pods -n kube-system | grep port
+     a) Create yaml file
+        cat > testpx.yaml << EOF
+        > kind: PersistentVolumeClaim apiVersion: v1 metadata: name: testpx-pvc spec: storageClassName: portworx-shared-sc accessModes: - ReadWriteMany resources: requests: storage: 1Gi
+        > EOF
+     b) oc create -f testpx.yaml
+     
+     Verify:
      ```
  11. 
  
 # CPD Base installation
-  1.
+  1.Software download
+    a) Refreence Link: https://apps.na.collabserv.com/wikis/home?lang=en-us#!/wiki/Wd855b33ea663_4b57_a7c7_f5e8e37c2716/page/Watson%20on%20Cloud%20Pak%20Releases
+    b) In the lab
+       * CP4D EE 2.5: CJ6APEN (11/22/2019)
+       * Watson Assistant 
+    c)
+  2. 
   
 # WKC
 
