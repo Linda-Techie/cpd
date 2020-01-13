@@ -7,7 +7,6 @@ The OCP baseline content is originally cloned from Victor Havard. This doc is in
   * CPD v2.5 add-on components: Analytics engine, Spark, SPSS, Cognos Analytics, Analytics dashboard, Data Stage, OpenScale, Dicision Optimization, Watson Studio, Watson Machine Learning, Watson Knowledge Catalog, Data Virtualization, DB2 Warehouse, Jupyter notebook with R 3.6, Open Source management, RStudio. (Working progress: Watson Knowledge Studio, Watson Assistant, Watson APIs.)
 
 ## Document is based on and tested with following cluster spec 
-
 For this exercise, the following nodes will be deployed (non-HA instances will only need one of each node type):
 
 |    Node         |  Host     | Disk (GB)    | vCPU  | Memory |
@@ -25,7 +24,6 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
 | NFS             | nfs       | 200,500      |   4   |    8   |
 
 ## Prepare Nodes for Installation
-
 **Note:** The following steps should be carried out on **all** nodes and be run as the `root` user.
 
 1. Install all nodes with Red Hat Enterprise Linux version 7.4 or higher with only the Minimal installation packages. Only install the operating system on the first allocated disk (e.g. /dev/sda).  Do not put a partition on any disk other than the disk where the operating system will be installed (the boot disk).
@@ -281,10 +279,10 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
          showmount -e nfs-server.domain.com
        ```
 
-  3. Prepare NFS Client -- on a RHEL/CentOS based server
-     '''
-     yum install -y nfs-utils
-     '''
+    3. Prepare NFS Client -- on a RHEL/CentOS based server
+       '''
+       yum install -y nfs-utils
+       '''
      
 18. Create 3 files and run with ansible-playbook
 ```
@@ -319,13 +317,13 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
   #Reboot all nodes (except ansible node)
 ```
 
-19. Check your installation prior to install (~20 minutes)
-  ```
-  cd <location of above hosts file>
-  ansible-playbook -i hosts /usr/share/ansible/openshift-ansible/playbooks/prerequisites.yml
-  ```
+20. Check your installation prior to install (~20 minutes)
+    ```
+    cd <location of above hosts file>
+    ansible-playbook -i hosts /usr/share/ansible/openshift-ansible/playbooks/prerequisites.yml
+    ```
 
-20. Deploy the cluster (~60 minutes)
+21. Deploy the cluster (~60 minutes)
     ```
     ansible-playbook -i hosts /usr/share/ansible/openshift-ansible/playbooks/deploy_cluster.yml -vvv | tee install.log
   
