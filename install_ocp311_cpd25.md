@@ -1,3 +1,5 @@
+#DRAFT -- WORKING PROGRESS as of 1/13/2020
+
 ## Note: 
 The OCP baseline content is originally cloned from Victor Havard. This doc is intented to be used as a cookbook and labs, the detail knowledge and explanation sections were removed, also extra content were added primarily for Cloud Pak for Data practice. 
 
@@ -154,83 +156,83 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
        * openshift_hosted_registry_storage_nfs_options='*(rw,no_root_squash,anonuid=1000,anongid=2000)' # Don't worry about the uid & gid
 
 
-### OSE Inventory File
-  #### For more information see: https://docs.openshift.com/container-platform/3.11/install/configuring_inventory_file.html#configuring-ansible
-```
-  [OSEv3:children]
-  masters
-  nodes
-  nfs
-  etcd
-  lb
+       ### OSE Inventory File
+         #### For more information see: https://docs.openshift.com/container-platform/3.11/install/configuring_inventory_file.html#configuring-ansible
+       ```
+         [OSEv3:children]
+         masters
+         nodes
+         nfs
+         etcd
+         lb
 
-  # define openshift variables
-  [OSEv3:vars]
-  containerized=true
-  openshift_deployment_type=openshift-enterprise
-  openshift_hosted_registry_storage_volume_size=50Gi
-  openshift_docker_insecure_registries="172.30.0.0/16"
-  openshift_disable_check=docker_image_availability
-  #openshift_node_groups=[ {"name": "all-in-one", "labels": ["node-role.kubernetes.io/master=true", "node-role.kubernetes.io/infra=true", "node-role.kubernetes.io/compute=true" ]}, {"name": "node-config-master", "labels": ["node-role.kubernetes.io/master=true"]}, {"name": "node-config-infra", "labels": ["node-role.kubernetes.io/infra=true"]}, {"name": "node-config-compute", "labels": ["node-role.kubernetes.io/compute=true"]}]
-  oreg_url=registry.access.redhat.com/openshift3/ose-${component}:${version}
-  openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider'}]
-  openshift_master_htpasswd_users={'ocadmin': '$apr1$CdyzN7vS$wM6gchgqURLe1A7gQRbIi0'}
-  ansible_ssh_user=root
-  os_firewall_use_firewalld=True
-  openshift_master_api_port=443
-  openshift_master_console_port=443
+         # define openshift variables
+         [OSEv3:vars]
+         containerized=true
+         openshift_deployment_type=openshift-enterprise
+         openshift_hosted_registry_storage_volume_size=50Gi
+         openshift_docker_insecure_registries="172.30.0.0/16"
+         openshift_disable_check=docker_image_availability
+         #openshift_node_groups=[ {"name": "all-in-one", "labels": ["node-role.kubernetes.io/master=true", "node-role.kubernetes.io/infra=true", "node-role.kubernetes.io/compute=true" ]}, {"name": "node-config-master", "labels": ["node-role.kubernetes.io/master=true"]}, {"name": "node-config-infra", "labels": ["node-role.kubernetes.io/infra=true"]}, {"name": "node-config-compute", "labels": ["node-role.kubernetes.io/compute=true"]}]
+         oreg_url=registry.access.redhat.com/openshift3/ose-${component}:${version}
+         openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider'}]
+         openshift_master_htpasswd_users={'ocadmin': '$apr1$CdyzN7vS$wM6gchgqURLe1A7gQRbIi0'}
+         ansible_ssh_user=root
+         os_firewall_use_firewalld=True
+         openshift_master_api_port=443
+         openshift_master_console_port=443
 
-  openshift_console_install=true
-  openshift_console_hostname=console.apps.cp4d-5.csplab.local
+         openshift_console_install=true
+         openshift_console_hostname=console.apps.cp4d-5.csplab.local
 
-  openshift_master_cluster_method=native
-  openshift_master_cluster_hostname=openshift.cp4d-5.csplab.local
-  openshift_master_cluster_public_hostname=openshift.cp4d-5.csplab.local
-  openshift_disable_check=docker_image_availability
+         openshift_master_cluster_method=native
+         openshift_master_cluster_hostname=openshift.cp4d-5.csplab.local
+         openshift_master_cluster_public_hostname=openshift.cp4d-5.csplab.local
+         openshift_disable_check=docker_image_availability
 
-  # CRI-O
-  openshift_use_crio=True
-  openshift_use_crio_only=True
+         # CRI-O
+         openshift_use_crio=True
+         openshift_use_crio_only=True
 
-  # NFS Host Group
-  # An NFS volume will be created with path "nfs_directory/volume_name"
-  # on the host within the [nfs] host group.  For example, the volume
-  # path using these options would be "/exports/registry".  "exports" is
-  # is the name of the export served by the nfs server.  "registry" is
-  # the name of a directory inside of "/exports".
-  openshift_hosted_registry_storage_kind=nfs
-  openshift_hosted_registry_storage_access_modes=['ReadWriteMany']
-  # nfs_directory must conform to DNS-1123 subdomain must consist of lower case
-  # alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character
-  openshift_hosted_registry_storage_nfs_directory=/data
-  openshift_hosted_registry_storage_nfs_options='*(rw,no_root_squash,anonuid=1000,anongid=2000)'
-  openshift_hosted_registry_storage_volume_name=registry
-  openshift_hosted_registry_storage_volume_size=200Gi
+         # NFS Host Group
+         # An NFS volume will be created with path "nfs_directory/volume_name"
+         # on the host within the [nfs] host group.  For example, the volume
+         # path using these options would be "/exports/registry".  "exports" is
+         # is the name of the export served by the nfs server.  "registry" is
+         # the name of a directory inside of "/exports".
+         openshift_hosted_registry_storage_kind=nfs
+         openshift_hosted_registry_storage_access_modes=['ReadWriteMany']
+         # nfs_directory must conform to DNS-1123 subdomain must consist of lower case
+         # alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character
+         openshift_hosted_registry_storage_nfs_directory=/data
+         openshift_hosted_registry_storage_nfs_options='*(rw,no_root_squash,anonuid=1000,anongid=2000)'
+         openshift_hosted_registry_storage_volume_name=registry
+         openshift_hosted_registry_storage_volume_size=200Gi
 
-  # host group for masters
-  [masters]
-  m[1:3].cp4d-5.csplab.local
+         # host group for masters
+         [masters]
+         m[1:3].cp4d-5.csplab.local
 
-  # host group for etcd
-  [etcd]
-  m[1:3].cp4d-5.csplab.local
+         # host group for etcd
+         [etcd]
+         m[1:3].cp4d-5.csplab.local
 
-  # load balancer
-  [lb]
-  openshift.cp4d-5.csplab.local
-  infra-lb.cp4d-5.csplab.local
+         # load balancer
+         [lb]
+         openshift.cp4d-5.csplab.local
+         infra-lb.cp4d-5.csplab.local
 
-  # nfs server
-  [nfs]
-  nfs.cp4d-5.csplab.local
+         # nfs server
+         [nfs]
+         nfs.cp4d-5.csplab.local
 
-  # All nodes and their respective node types
-  [nodes]
-  m[1:3].cp4d-5.csplab.local openshift_node_group_name="node-config-master-infra-crio"
-  openshift.cp4d-5.csplab.local openshift_node_group_name="node-config-infra-crio"
-  n[1:5].cp4d-5.csplab.local openshift_node_group_name="node-config-compute-crio"
+         # All nodes and their respective node types
+         [nodes]
+         m[1:3].cp4d-5.csplab.local openshift_node_group_name="node-config-master-infra-crio"
+         openshift.cp4d-5.csplab.local openshift_node_group_name="node-config-infra-crio"
+         n[1:5].cp4d-5.csplab.local openshift_node_group_name="node-config-compute-crio"
 
-  ```
+         ```
 
 17. Prepare NFS server & client as needed (Optional)
     Create a NFS Server on a RHEL (or CentOS) minimum-installed OS server
@@ -317,23 +319,21 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
   #Reboot all nodes (except ansible node)
 ```
 
-20. Check your installation prior to install (~20 minutes)
+19. Check your installation prior to install (~20 minutes)
     ```
     cd <location of above hosts file>
     ansible-playbook -i hosts /usr/share/ansible/openshift-ansible/playbooks/prerequisites.yml
     ```
 
-21. Deploy the cluster (~60 minutes)
+20. Deploy the cluster (~60 minutes)
     ```
     ansible-playbook -i hosts /usr/share/ansible/openshift-ansible/playbooks/deploy_cluster.yml -vvv | tee install.log
   
     ```
 
 ## Post Installation 
-
 ### Configure new cluster
 1. ssh to master1
-
 2. login to master1
 ```
    ssh master1
