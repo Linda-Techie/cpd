@@ -131,8 +131,11 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
 **Note:** The following should only be done on the ansible (installer) node.
 
 16. Edit an Ansible hosts file in any location, example with Portworx setup in below
-    ###Note: 
-    a) For Portworx
+
+    ### Note: 
+    
+    1. For Portworx
+    
        Add
         * openshift_use_crio=True
         * openshift_use_crio_only=True
@@ -145,14 +148,15 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
 
        Remove or Comment out line:
        #openshift_node_groups
-    b) For NFS
+    2. For NFS
        Add 
        * [nfs] section 
        * openshift_hosted_registry_storage_nfs_directory=/data #Your mount drive
        * openshift_hosted_registry_storage_nfs_options='*(rw,no_root_squash,anonuid=1000,anongid=2000)' # Don't worry about the uid & gid
 
     ```
-    ### OSE Inventory File
+
+### OSE Inventory File
   # For more information see: https://docs.openshift.com/container-platform/3.11/install/configuring_inventory_file.html#configuring-ansible
   # This section defines the types of nodes we will deploy
   # define openshift components
