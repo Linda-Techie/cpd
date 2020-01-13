@@ -131,11 +131,8 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
 **Note:** The following should only be done on the ansible (installer) node.
 
 16. Edit an Ansible hosts file in any location, example with Portworx setup in below
-
-    ### Note: 
-    
+    #### Note: 
     1. For Portworx
-    
        Add
         * openshift_use_crio=True
         * openshift_use_crio_only=True
