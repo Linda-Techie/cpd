@@ -1,4 +1,5 @@
-## Note: The OCP baseline content is originally cloned from Victor Havard. This doc is intented to be used as a cookbook and labs, the detail knowledge and explanation sections were removed, also extra content were added primarily for Cloud Pak for Data practice. 
+## Note: 
+The OCP baseline content is originally cloned from Victor Havard. This doc is intented to be used as a cookbook and labs, the detail knowledge and explanation sections were removed, also extra content were added primarily for Cloud Pak for Data practice. 
 
 ## Table Content
   * OCP v3.11 installation with Portworx & NFS storages
@@ -133,6 +134,7 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
 16. Edit an Ansible hosts file in any location, example with Portworx setup in below
     #### Note: 
     1. For Portworx
+    
        Add
         * openshift_use_crio=True
         * openshift_use_crio_only=True
@@ -145,18 +147,18 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
 
        Remove or Comment out line:
        #openshift_node_groups
+       
     2. For NFS
+    
        Add 
        * [nfs] section 
        * openshift_hosted_registry_storage_nfs_directory=/data #Your mount drive
        * openshift_hosted_registry_storage_nfs_options='*(rw,no_root_squash,anonuid=1000,anongid=2000)' # Don't worry about the uid & gid
 
-    ```
 
 ### OSE Inventory File
-  # For more information see: https://docs.openshift.com/container-platform/3.11/install/configuring_inventory_file.html#configuring-ansible
-  # This section defines the types of nodes we will deploy
-  # define openshift components
+  #### For more information see: https://docs.openshift.com/container-platform/3.11/install/configuring_inventory_file.html#configuring-ansible
+```
   [OSEv3:children]
   masters
   nodes
@@ -235,7 +237,7 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
 17. Prepare NFS server & client as needed (Optional)
 
     Create a NFS Server
-    a) OS Level prep
+    1. OS Level prep
        * yum install -y nfs-utils nfs-utils-lib
        * systemctl enable nfs-server; systemctl start nfs-server
        * systemctl enable rpcbind; systemctl start rpcbind
@@ -243,17 +245,17 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
        * firewall-cmd --permanent --zone=public --add-service=rpcbind
        * firewall-cmd --reload
   
-    b) Prepare NFS server shared disk
+    2. Prepare NFS server shared disk
        '''
        lsblk  
        parted /dev/sdb mklabel gpt
        parted -a opt /dev/sdb mkpart primary xfs 0% 100%
        mkfs.xfs -f -n ftype=1 -i size=512 -n size=8192 /dev/sdb1
        
-       # Create a mount drive. Ex:
+       #Create a mount drive. Ex:
        mkdir /data
 
-       # Modify /etc/fstab for reboot safe
+       #Modify /etc/fstab for reboot safe
          blkid # identify disk UUID
          #Example
          cat /etc/fstab
@@ -264,20 +266,19 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
 
        mount -a
 
-       # Edit /etc/exports 
-       # Example:
+       #Edit /etc/exports 
+       #Example:
          cat /etc/exports
          /data *(rw,sync,no_root_squash,anonuid=1000,anongid=2000) 
          
-       # Modify permission
-
+       #Modify permission
         chown 1000:2000 /data
         chmod 777 /data
 
-       # Restart service
+       #Restart service
         systemctl restart nfs.service
    
-       # Verify mount: 
+       #Verify mount: 
          showmount -e nfs-server.domain.com
   ```
 
@@ -286,7 +287,7 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
 
 18. Create 3 files and run with ansible-playbook
 ```
-  # cat setupselinux.yaml
+  #cat setupselinux.yaml
   ---
   - name: Enable SELinux
     hosts: all
@@ -294,7 +295,7 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
     - name: set selinux enforcing
       selinux: state=enforcing policy=targeted
 
-  # cat setupseboolean.yaml
+  #cat setupseboolean.yaml
   ---
   - name: SELinux Boolean
     hosts: all
@@ -314,7 +315,7 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
   ansible-playbook -i hosts setupseboolean.yaml
   ansible-playbook -i hosts setvmmaxmapcount.yaml
   
-  # Reboot all nodes (except ansible node)
+  #Reboot all nodes (except ansible node)
  ```
 
 19. Check your installation prior to install (~20 minutes)
@@ -332,23 +333,23 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
 ## Post Installation 
 
 ### Configure new cluster
-a) ssh to master1
+1. ssh to master1
 
-b) login to master1
+2. login to master1
 ```
    ssh master1
    oc login -u system:admin
 ```
-c) create user "ocadmin"
+3. create user "ocadmin"
 ```
    cd /etc/origin/master
    htpasswd -b htpasswd ocadmin ocadmin
 ```
-d) Set ocadmin to cluster's admin
+4. Set ocadmin to cluster's admin
 ```
    oc adm policy add-cluster-role-to-user cluster-admin ocadmin
 ```
-e) Verify ocadmin login
+5. Verify ocadmin login
 ```
    oc login --username=ocadmin --password=ocadmin --insecure-skip-tls-verify
 ```
