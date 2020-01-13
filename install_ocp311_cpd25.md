@@ -235,8 +235,7 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
   ```
 
 17. Prepare NFS server & client as needed (Optional)
-
-    Create a NFS Server
+    Create a NFS Server on a RHEL (or CentOS) minimum-installed OS server
     1. OS Level prep
        * yum install -y nfs-utils nfs-utils-lib
        * systemctl enable nfs-server; systemctl start nfs-server
@@ -280,11 +279,13 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
    
        #Verify mount: 
          showmount -e nfs-server.domain.com
-  ```
+       ```
 
-  Prepare NFS Client 
-  * yum install -y nfs-utils
-
+  3. Prepare NFS Client -- on a RHEL/CentOS based server
+     '''
+     yum install -y nfs-utils
+     '''
+     
 18. Create 3 files and run with ansible-playbook
 ```
   #cat setupselinux.yaml
@@ -316,7 +317,7 @@ For this exercise, the following nodes will be deployed (non-HA instances will o
   ansible-playbook -i hosts setvmmaxmapcount.yaml
   
   #Reboot all nodes (except ansible node)
- ```
+```
 
 19. Check your installation prior to install (~20 minutes)
   ```
